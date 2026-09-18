@@ -1,6 +1,16 @@
-Turn **any RSS, Atom or JSON feed into clean, consistent JSON**. Paste feed URLs (or just website URLs, and the Actor finds the feed for you) and get back one normalized record per article, episode or post: title, link, author, publication date, categories, HTML and plain-text content, lead image and media enclosures, regardless of which of the four feed formats the publisher uses.
+**RSS to JSON** converter and RSS feed parser API: turn any RSS, Atom or JSON feed into clean, consistent JSON. Paste feed URLs (or just website URLs, and the Actor finds the feed for you) and get back one normalized record per article, episode or post: title, link, author, publication date, categories, HTML and plain-text content, lead image and media enclosures, whichever feed format the publisher uses.
 
-It is a feed parser API for **developers, content teams, newsletter builders and automation users** who do not want to write another XML parser or pay a monthly subscription for a feed-to-JSON service. You pay a small flat price per item, and feeds that cannot be found, fetched or parsed are reported **free of charge**.
+It is built for **developers, content teams, newsletter builders and automation users** who do not want to write another XML parser or pay a monthly subscription for a feed-to-JSON service. You pay a small flat price per item, and feeds that cannot be found, fetched or parsed are reported **free of charge**.
+
+## Features
+
+- Convert an RSS or Atom feed to JSON with one API call
+- Parse RSS 2.0, Atom 1.0, RSS 1.0 (RDF) and JSON Feed into the same item shape
+- Find the RSS feed of a website automatically from its URL
+- Get full article HTML and plain text from a feed for LLM and RAG pipelines
+- Extract podcast enclosures, media files and lead images from feeds
+- Fetch only new feed items published after a given date
+- Aggregate many RSS feeds into one dataset for newsletters and monitoring
 
 ## What can you do with RSS and Atom Feed to JSON?
 
@@ -23,8 +33,6 @@ The Actor reads feeds only: it does not open the linked articles, so the content
 2. Optionally set **Max items per feed**, a **Published after** date, and switch off **Include full HTML content** if you only need titles and links.
 3. Click **Start**. Items appear in the **Output** tab within seconds.
 4. Download the dataset as JSON, CSV, Excel or XML, or connect it to Google Sheets, Slack, Make, Zapier or a webhook via the **Integrations** tab.
-
-To run it programmatically, use the **API** tab: any Apify Actor can be started with one HTTP request or via the [JavaScript](https://docs.apify.com/api/client/js) and [Python](https://docs.apify.com/api/client/python) clients. The Actor is also available to AI agents through the Apify MCP server.
 
 ```json
 {
@@ -67,7 +75,7 @@ Feeds that could not be loaded are recorded too, so nothing silently disappears:
 { "feedUrl": "https://example.com/no-feed-here", "success": false, "errorType": "not-found", "error": "No RSS, Atom or JSON feed found for this page", "fetchedAt": "..." }
 ```
 
-### Fields
+## Output fields
 
 | Field | Description |
 | --- | --- |
@@ -84,6 +92,46 @@ Feeds that could not be loaded are recorded too, so nothing silently disappears:
 | `imageUrl` | Lead image from Media RSS, `itunes:image`, an image enclosure or the first `<img>` in the content. |
 | `errorType` | For failures only: `invalid-url`, `not-found`, `invalid-feed`, `http-error`, `blocked`, `dns`, `timeout`, `network` or `other`. |
 
+## Use it from the API, Python, JavaScript or an AI agent
+
+Run the Actor and get the dataset back in one HTTP call:
+
+```bash
+curl -X POST "https://api.apify.com/v2/acts/josh99smith~rss-feed-to-json/run-sync-get-dataset-items?token=<YOUR_API_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"feedUrls": ["https://blog.apify.com/rss/"], "maxItemsPerFeed": 20}'
+```
+
+Python, with the [apify-client](https://docs.apify.com/api/client/python) package:
+
+```python
+from apify_client import ApifyClient
+
+client = ApifyClient("<YOUR_API_TOKEN>")
+run = client.actor("josh99smith/rss-feed-to-json").call(
+    run_input={"feedUrls": ["https://hnrss.org/frontpage"], "maxItemsPerFeed": 20, "publishedAfter": "2026-09-01"}
+)
+for item in client.dataset(run["defaultDatasetId"]).iterate_items():
+    print(item.get("publishedAt"), item.get("title"), item.get("url"))
+```
+
+JavaScript or TypeScript, with the [apify-client](https://docs.apify.com/api/client/js) package:
+
+```javascript
+import { ApifyClient } from 'apify-client';
+
+const client = new ApifyClient({ token: '<YOUR_API_TOKEN>' });
+const run = await client.actor('josh99smith/rss-feed-to-json').call({
+    feedUrls: ['https://blog.apify.com/rss/', 'https://www.theverge.com'],
+    maxItemsPerFeed: 20,
+    includeContent: false,
+});
+const { items } = await client.dataset(run.defaultDatasetId).listItems();
+console.log(items.map((item) => [item.title, item.url]));
+```
+
+The Actor is also available as a tool through the Apify MCP server, so AI agents can call it directly, and it can be scheduled or connected to Zapier, Make, n8n and Google Sheets in the **Integrations** tab.
+
 ## Pricing: how much does it cost to convert a feed to JSON?
 
 You pay a **flat price per delivered item** (shown next to the Start button); 2,000 items cost about $1. Nothing is charged for Actor start-up or for feeds that fail. Use **Max items per feed** and **Published after** to fetch only what you need, and the Actor stops automatically when it reaches the maximum cost you set for a run.
@@ -93,21 +141,40 @@ You pay a **flat price per delivered item** (shown next to the Start button); 2,
 - **Only new items**: on a schedule, set **Published after** to the previous run time (or pass it via the API) so you only pay for new articles.
 - **Smaller datasets**: switch off **Include full HTML content** when you just need titles, links and dates; `contentText` remains available for search and LLM use.
 - **Blocked feeds**: a few publishers block cloud IP addresses. Enable **Proxy configuration > Apify Proxy** in the Advanced section (proxy traffic is billed by Apify separately).
-- **Websites instead of feeds**: pasting `https://www.theverge.com` is enough; the Actor picks up the advertised feed. If a site advertises several feeds, the first working one is used, so paste the exact feed URL if you want a specific one (comments feed, category feed, ...).
+- **Websites instead of feeds**: pasting `https://www.theverge.com` is enough; the Actor picks up the advertised feed. If a site advertises several, the first working one is used, so paste the exact feed URL when you want a specific one.
 
 ## FAQ
 
-**Which feed formats are supported?**
+### Which feed formats can be converted to JSON?
+
 RSS 2.0 (including podcast feeds with iTunes and Media RSS extensions), Atom 1.0, RSS 1.0 / RDF and JSON Feed 1.0 and 1.1. Feeds served gzip-compressed or behind redirects work too.
 
-**Why is `contentHtml` short or missing for some items?**
-The Actor returns exactly what the feed contains. Many news publishers only include a summary in their feed. To get full article text, pass the `url` values to a content-extraction Actor.
+### Why is `contentHtml` short or missing for some items?
 
-**How are dates handled?**
+The Actor returns exactly what the feed contains, and many news publishers only include a summary. To get full article text, pass the `url` values to a content-extraction Actor.
+
+### How are feed dates handled?
+
 RFC 822 (`Tue, 10 Jun 2003 04:00:00 GMT`), ISO 8601 and common timezone abbreviations are converted to UTC ISO 8601. Items whose dates cannot be parsed have `publishedAt: null` and are never filtered out by **Published after**.
 
-**Is this legal?**
+### What are the limits on items, content size and feeds?
+
+**Max items per feed** goes up to 10,000 per run (default 100). `contentHtml` is capped at 50,000 characters and `summary` and `contentText` at 5,000 characters each. A feed file may be up to 32 MB, up to 10 feeds are fetched in parallel, and each request times out after at most 120 seconds.
+
+### Is it legal to parse RSS feeds?
+
 Feeds are published for syndication and read exactly as a feed reader would, a couple of requests per feed. The Actor stores only what the publisher includes in the feed. You are responsible for using the content in line with the publisher's terms and the laws that apply to you.
+
+## Related Actors by the same developer
+
+- [Website Tech Stack Detector](https://apify.com/josh99smith/tech-stack-detector): find out what a website is built with.
+- [Website Screenshot API](https://apify.com/josh99smith/website-screenshot-api): full-page screenshots and PDFs of any URL.
+- [Google Autocomplete Keyword Scraper](https://apify.com/josh99smith/google-autocomplete-scraper): keyword suggestions from Google search.
+- [App Store & Google Play Reviews Scraper](https://apify.com/josh99smith/app-reviews-scraper): app reviews from both stores.
+- [PageSpeed Insights Core Web Vitals Audit](https://apify.com/josh99smith/pagespeed-insights-audit): Core Web Vitals via Google's API.
+- [Remote Jobs Aggregator API](https://apify.com/josh99smith/remote-jobs-aggregator): remote job listings in one dataset.
+- [PDF Text & Metadata Extractor](https://apify.com/josh99smith/pdf-text-extractor): text and metadata from PDF URLs.
+- [Sitemap URL Extractor](https://apify.com/josh99smith/sitemap-url-extractor): all URLs from XML sitemaps.
 
 ## Support and feedback
 

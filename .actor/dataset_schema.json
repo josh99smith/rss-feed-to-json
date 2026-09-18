@@ -1,6 +1,184 @@
 {
     "actorSpecification": 1,
-    "fields": {},
+    "fields": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "description": "One record per feed item, normalised to the same shape for RSS 2.0, Atom, RSS 1.0 and JSON Feed. Feeds that cannot be found, fetched or parsed produce a free failure record with success: false.",
+        "properties": {
+            "feedUrl": {
+                "type": "string",
+                "description": "URL of the feed the item came from, or the URL you supplied on failure records."
+            },
+            "fetchedAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When the feed was fetched (ISO 8601, UTC)."
+            },
+            "feedTitle": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "description": "Title of the feed or channel, or null when the feed has none."
+            },
+            "feedType": {
+                "type": "string",
+                "enum": [
+                    "rss",
+                    "atom",
+                    "rss1",
+                    "json"
+                ],
+                "description": "Detected feed format: rss (RSS 2.0), atom (Atom 1.0), rss1 (RSS 1.0 / RDF) or json (JSON Feed)."
+            },
+            "id": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "description": "Item identifier from guid, Atom id or JSON Feed id, falling back to the link; null when none exists."
+            },
+            "title": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "description": "Item title with HTML stripped, or null."
+            },
+            "url": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "description": "Absolute link to the article, episode or post, or null."
+            },
+            "author": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "description": "Author name from dc:creator, author or Atom author/name, with the feed-level author as fallback; null when unknown."
+            },
+            "publishedAt": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "description": "Publication date converted to ISO 8601 UTC, or null when the feed has none or it cannot be parsed."
+            },
+            "updatedAt": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "description": "Last update date converted to ISO 8601 UTC, or null."
+            },
+            "summary": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "description": "Plain-text summary from description, Atom summary or JSON summary, up to 5,000 characters; null when absent."
+            },
+            "contentHtml": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "description": "Full HTML body from content:encoded, Atom content or JSON content_html, up to 50,000 characters; null when Include full HTML content is off or the feed has none."
+            },
+            "contentText": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "description": "Article body as plain text with paragraph breaks, up to 5,000 characters; null when Add plain-text content is off."
+            },
+            "categories": {
+                "type": "array",
+                "description": "Categories, tags or dc:subject values, de-duplicated.",
+                "items": {
+                    "type": "string",
+                    "description": "A category or tag name."
+                }
+            },
+            "enclosures": {
+                "type": "array",
+                "description": "Attached media files from RSS enclosures, Media RSS content and JSON Feed attachments (podcast audio, video, images).",
+                "items": {
+                    "type": "object",
+                    "description": "One attached media file.",
+                    "properties": {
+                        "url": {
+                            "type": "string",
+                            "description": "Absolute URL of the media file."
+                        },
+                        "type": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "description": "MIME type such as audio/mpeg or image/jpeg, or null when not declared."
+                        },
+                        "length": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "description": "File size in bytes, or null when not declared."
+                        }
+                    },
+                    "required": [
+                        "url",
+                        "type",
+                        "length"
+                    ]
+                }
+            },
+            "imageUrl": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "description": "Lead image from Media RSS, itunes:image, an image enclosure or the first img tag in the content; null when none is found."
+            },
+            "discoveredFrom": {
+                "type": "string",
+                "description": "The web page URL you supplied, present only when the feed was auto-discovered from that page."
+            },
+            "success": {
+                "type": "boolean",
+                "description": "false on failure records; absent on delivered feed items."
+            },
+            "errorType": {
+                "type": "string",
+                "enum": [
+                    "invalid-url",
+                    "dns",
+                    "timeout",
+                    "blocked",
+                    "http-error",
+                    "network",
+                    "not-found",
+                    "invalid-feed",
+                    "other"
+                ],
+                "description": "Failure category, present only on failure records."
+            },
+            "error": {
+                "type": "string",
+                "description": "Human-readable reason the feed could not be delivered, present only on failure records."
+            },
+            "statusCode": {
+                "type": "integer",
+                "description": "HTTP status code returned by the server, present on some failure records."
+            }
+        },
+        "required": [
+            "feedUrl",
+            "fetchedAt"
+        ]
+    },
     "views": {
         "overview": {
             "title": "Overview",
@@ -22,34 +200,88 @@
             "display": {
                 "component": "table",
                 "properties": {
-                    "imageUrl": { "label": "Image", "format": "image" },
-                    "title": { "label": "Title", "format": "text" },
-                    "url": { "label": "Link", "format": "link" },
-                    "author": { "label": "Author", "format": "text" },
-                    "publishedAt": { "label": "Published", "format": "date" },
-                    "feedTitle": { "label": "Feed", "format": "text" },
-                    "feedType": { "label": "Format", "format": "text" },
-                    "categories": { "label": "Categories", "format": "array" },
-                    "summary": { "label": "Summary", "format": "text" },
-                    "errorType": { "label": "Error type", "format": "text" },
-                    "error": { "label": "Error", "format": "text" }
+                    "imageUrl": {
+                        "label": "Image",
+                        "format": "image"
+                    },
+                    "title": {
+                        "label": "Title",
+                        "format": "text"
+                    },
+                    "url": {
+                        "label": "Link",
+                        "format": "link"
+                    },
+                    "author": {
+                        "label": "Author",
+                        "format": "text"
+                    },
+                    "publishedAt": {
+                        "label": "Published",
+                        "format": "date"
+                    },
+                    "feedTitle": {
+                        "label": "Feed",
+                        "format": "text"
+                    },
+                    "feedType": {
+                        "label": "Format",
+                        "format": "text"
+                    },
+                    "categories": {
+                        "label": "Categories",
+                        "format": "array"
+                    },
+                    "summary": {
+                        "label": "Summary",
+                        "format": "text"
+                    },
+                    "errorType": {
+                        "label": "Error type",
+                        "format": "text"
+                    },
+                    "error": {
+                        "label": "Error",
+                        "format": "text"
+                    }
                 }
             }
         },
         "media": {
             "title": "Enclosures",
             "transformation": {
-                "fields": ["title", "feedTitle", "enclosures"],
-                "unwind": ["enclosures"]
+                "fields": [
+                    "title",
+                    "feedTitle",
+                    "enclosures"
+                ],
+                "unwind": [
+                    "enclosures"
+                ]
             },
             "display": {
                 "component": "table",
                 "properties": {
-                    "title": { "label": "Item", "format": "text" },
-                    "feedTitle": { "label": "Feed", "format": "text" },
-                    "enclosures.url": { "label": "File", "format": "link" },
-                    "enclosures.type": { "label": "MIME type", "format": "text" },
-                    "enclosures.length": { "label": "Size (bytes)", "format": "number" }
+                    "title": {
+                        "label": "Item",
+                        "format": "text"
+                    },
+                    "feedTitle": {
+                        "label": "Feed",
+                        "format": "text"
+                    },
+                    "enclosures.url": {
+                        "label": "File",
+                        "format": "link"
+                    },
+                    "enclosures.type": {
+                        "label": "MIME type",
+                        "format": "text"
+                    },
+                    "enclosures.length": {
+                        "label": "Size (bytes)",
+                        "format": "number"
+                    }
                 }
             }
         }

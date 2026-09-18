@@ -3,7 +3,7 @@
     "actorSpecification": 1,
     "name": "rss-feed-to-json",
     "title": "RSS and Atom Feed to JSON",
-    "description": "Convert any RSS 2.0, Atom, RSS 1.0 or JSON Feed into clean, normalized JSON items with title, link, author, dates, HTML and plain-text content, categories, images and podcast enclosures. Auto-discovers feeds from ordinary web pages.",
+    "description": "Convert RSS, Atom and JSON feeds to clean JSON items with title, link, author, date, content and enclosures. Auto-discovers feeds from a site URL. Pay per item.",
     "version": "0.1",
     "buildTag": "latest",
     "meta": {
