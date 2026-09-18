@@ -1,7 +1,6 @@
 {
     "actorSpecification": 1,
     "fields": {
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "description": "One record per feed item, normalised to the same shape for RSS 2.0, Atom, RSS 1.0 and JSON Feed. Feeds that cannot be found, fetched or parsed produce a free failure record with success: false.",
         "properties": {
