@@ -1,0 +1,18 @@
+{
+    "actorOutputSchemaVersion": 1,
+    "title": "RSS and Atom Feed to JSON output",
+    "properties": {
+        "results": {
+            "type": "string",
+            "title": "Feed items",
+            "template": "{{links.apiDefaultDatasetUrl}}",
+            "description": "One normalized record per feed item (title, link, author, dates, content, categories, enclosures, image), plus free failure records for feeds that could not be loaded."
+        },
+        "summary": {
+            "type": "string",
+            "title": "Run summary",
+            "template": "{{links.apiDefaultKeyValueStoreUrl}}/records/SUMMARY",
+            "description": "Counts of requested feeds, parsed feeds, delivered and billed items, and failures."
+        }
+    }
+}

@@ -1,0 +1,63 @@
+{
+    "$schema": "https://apify.com/schemas/v1/input.ide.json",
+    "title": "RSS and Atom Feed to JSON input",
+    "description": "Paste feed URLs or website URLs. Every delivered feed item is one billable result; feeds that cannot be found, fetched or parsed are reported for free.",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "feedUrls": {
+            "title": "Feed or website URLs",
+            "type": "array",
+            "description": "One URL per line. RSS 2.0, Atom, RSS 1.0 (RDF) and JSON Feed URLs are parsed directly. If a URL is an ordinary web page, the Actor looks for the feed it advertises (`<link rel=\"alternate\" type=\"application/rss+xml\">` and similar) and common paths such as `/feed` or `/rss.xml`. Duplicates are removed automatically.",
+            "editor": "stringList",
+            "prefill": ["https://blog.apify.com/rss/", "https://hnrss.org/frontpage", "https://www.theverge.com"],
+            "uniqueItems": true
+        },
+        "maxItemsPerFeed": {
+            "title": "Max items per feed",
+            "type": "integer",
+            "description": "Deliver at most this many items from each feed (newest first, in feed order).",
+            "default": 100,
+            "minimum": 1,
+            "maximum": 10000,
+            "editor": "number"
+        },
+        "publishedAfter": {
+            "title": "Published after",
+            "type": "string",
+            "description": "Optional. Skip items published before this date. ISO 8601, e.g. `2026-01-31` or `2026-01-31T12:00:00Z`. Items without a publication date are kept.",
+            "editor": "textfield",
+            "pattern": "^\\s*$|^\\d{4}-\\d{2}-\\d{2}"
+        },
+        "includeContent": {
+            "title": "Include full HTML content",
+            "type": "boolean",
+            "description": "Add the article body as HTML (`contentHtml`, capped at 50,000 characters). Switch off for a smaller dataset when you only need titles and links.",
+            "default": true
+        },
+        "plainText": {
+            "title": "Add plain-text content",
+            "type": "boolean",
+            "description": "Strip HTML from the article body into `contentText` (capped at 5,000 characters). Handy for search indexes, LLM prompts and spreadsheets.",
+            "default": true
+        },
+        "timeoutSecs": {
+            "title": "Request timeout (seconds)",
+            "type": "integer",
+            "description": "Give up on a feed after this many seconds.",
+            "default": 30,
+            "minimum": 5,
+            "maximum": 120,
+            "editor": "number",
+            "sectionCaption": "Advanced"
+        },
+        "proxyConfiguration": {
+            "title": "Proxy configuration",
+            "type": "object",
+            "description": "Optional. Route requests through Apify Proxy if a site blocks cloud IP addresses. Proxy usage is billed by Apify separately from the per-item price of this Actor.",
+            "editor": "proxy",
+            "prefill": { "useApifyProxy": false }
+        }
+    },
+    "required": ["feedUrls"]
+}

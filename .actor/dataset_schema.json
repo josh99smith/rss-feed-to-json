@@ -1,0 +1,57 @@
+{
+    "actorSpecification": 1,
+    "fields": {},
+    "views": {
+        "overview": {
+            "title": "Overview",
+            "transformation": {
+                "fields": [
+                    "imageUrl",
+                    "title",
+                    "url",
+                    "author",
+                    "publishedAt",
+                    "feedTitle",
+                    "feedType",
+                    "categories",
+                    "summary",
+                    "errorType",
+                    "error"
+                ]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "imageUrl": { "label": "Image", "format": "image" },
+                    "title": { "label": "Title", "format": "text" },
+                    "url": { "label": "Link", "format": "link" },
+                    "author": { "label": "Author", "format": "text" },
+                    "publishedAt": { "label": "Published", "format": "date" },
+                    "feedTitle": { "label": "Feed", "format": "text" },
+                    "feedType": { "label": "Format", "format": "text" },
+                    "categories": { "label": "Categories", "format": "array" },
+                    "summary": { "label": "Summary", "format": "text" },
+                    "errorType": { "label": "Error type", "format": "text" },
+                    "error": { "label": "Error", "format": "text" }
+                }
+            }
+        },
+        "media": {
+            "title": "Enclosures",
+            "transformation": {
+                "fields": ["title", "feedTitle", "enclosures"],
+                "unwind": ["enclosures"]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "title": { "label": "Item", "format": "text" },
+                    "feedTitle": { "label": "Feed", "format": "text" },
+                    "enclosures.url": { "label": "File", "format": "link" },
+                    "enclosures.type": { "label": "MIME type", "format": "text" },
+                    "enclosures.length": { "label": "Size (bytes)", "format": "number" }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "seoTitle": "RSS Feed to JSON API: parse RSS, Atom and JSON feeds",
+    "seoDescription": "Convert RSS, Atom and JSON Feed URLs into clean JSON items with content, authors, dates, images and podcast enclosures. $0.0005 per item; failed feeds free.",
+    "categories": ["NEWS", "AUTOMATION", "DEVELOPER_TOOLS"],
+    "isPublic": true,
+    "actorPermissionLevel": "LIMITED_PERMISSIONS",
+    "defaultRunOptions": { "build": "latest", "memoryMbytes": 512, "timeoutSecs": 3600 },
+    "pricing": {
+        "events": {
+            "feed-item": {
+                "eventTitle": "Feed item delivered",
+                "eventDescription": "One feed item normalized to JSON (title, link, author, dates, HTML and plain-text content, categories, enclosures, image). Feeds that cannot be found, fetched or parsed are not charged.",
+                "eventPriceUsd": 0.0005,
+                "isPrimaryEvent": true
+            }
+        }
+    }
+}

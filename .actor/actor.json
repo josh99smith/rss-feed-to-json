@@ -1,0 +1,21 @@
+{
+    "$schema": "https://apify.com/schemas/v1/actor.ide.json",
+    "actorSpecification": 1,
+    "name": "rss-feed-to-json",
+    "title": "RSS and Atom Feed to JSON",
+    "description": "Convert any RSS 2.0, Atom, RSS 1.0 or JSON Feed into clean, normalized JSON items with title, link, author, dates, HTML and plain-text content, categories, images and podcast enclosures. Auto-discovers feeds from ordinary web pages.",
+    "version": "0.1",
+    "buildTag": "latest",
+    "meta": {
+        "templateId": "ts-empty",
+        "generatedBy": "Claude Code with Claude Opus 5"
+    },
+    "inputSchema": "./input_schema.json",
+    "outputSchema": "./output_schema.json",
+    "storages": {
+        "dataset": "./dataset_schema.json"
+    },
+    "dockerfile": "../Dockerfile",
+    "minMemoryMbytes": 256,
+    "maxMemoryMbytes": 2048
+}
