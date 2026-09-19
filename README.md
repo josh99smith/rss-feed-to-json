@@ -1,40 +1,36 @@
-**RSS to JSON** converter and RSS feed parser API: turn any RSS, Atom or JSON feed into clean, consistent JSON. Paste feed URLs (or just website URLs, and the Actor finds the feed for you) and get back one normalized record per article, episode or post: title, link, author, publication date, categories, HTML and plain-text content, lead image and media enclosures, whichever feed format the publisher uses.
+**RSS to JSON** converter and RSS feed parser API: turn any RSS, Atom or JSON feed into clean, consistent JSON. Paste feed URLs (or website URLs; the Actor finds the feed) and get one normalized record per article, episode or post: title, link, author, date, categories, HTML and plain-text content, lead image and media enclosures.
 
-It is built for **developers, content teams, newsletter builders and automation users** who do not want to write another XML parser or pay a monthly subscription for a feed-to-JSON service. You pay a small flat price per item, and feeds that cannot be found, fetched or parsed are reported **free of charge**.
+Built for **developers, content teams, newsletter builders and automation users**: a small flat price per item, no monthly subscription, and feeds that cannot be found, fetched or parsed are reported **free of charge**.
 
 ## Features
 
-- Convert an RSS or Atom feed to JSON with one API call
-- Parse RSS 2.0, Atom 1.0, RSS 1.0 (RDF) and JSON Feed into the same item shape
-- Find the RSS feed of a website automatically from its URL
-- Get full article HTML and plain text from a feed for LLM and RAG pipelines
-- Extract podcast enclosures, media files and lead images from feeds
-- Fetch only new feed items published after a given date
-- Monitor mode: get only the items that are new since the last run, so alerts never repeat
-- Aggregate many RSS feeds into one dataset for newsletters and monitoring
+- Convert RSS or Atom feeds to JSON with one API call
+- RSS 2.0, Atom 1.0, RSS 1.0 (RDF) and JSON Feed parsed into the same item shape
+- Automatic feed discovery from a website URL
+- Full article HTML and plain text for LLM and RAG pipelines
+- Podcast enclosures, media files and lead images
+- Only items published after a given date
+- Monitor mode: only items new since the last run, so alerts never repeat
 
 ## What can you do with RSS and Atom Feed to JSON?
 
-- **Content aggregation**: merge dozens of blogs, news sites and podcasts into one dataset for a newsletter, a news app or an internal digest.
-- **Monitor competitors and industry news**: schedule hourly runs with **Only new items since the last run** on and push each batch of new posts to Slack, email, Google Sheets or a webhook.
-- **Feed AI and RAG pipelines**: the `contentText` field gives you clean article text ready for embeddings, summarisation or classification without scraping every page.
-- **Replace Zapier / Make RSS triggers**: run on a schedule for a fraction of the price and keep the full item history in a dataset you own.
-- **Podcast and media tooling**: enclosure URLs, MIME types and file sizes are extracted from RSS enclosures, Media RSS and JSON Feed attachments.
-- **SEO and content research**: track publishing frequency, authors and categories across many sites.
+- **Content aggregation**: dozens of blogs, news sites and podcasts merged into one dataset for a newsletter, news app or digest.
+- **Competitor and industry monitoring**: hourly runs with monitor mode on, pushing new posts to Slack, email or a webhook.
+- **AI and RAG pipelines**: `contentText` is ready for embeddings, summarisation or classification.
+- **Replace Zapier / Make RSS triggers**: cheaper on a schedule, with the full item history in your own dataset.
+- **Podcast and media tooling**: enclosure URLs, MIME types and file sizes.
+- **SEO and content research**: publishing frequency, authors and categories across sites.
 
 ## How it works
 
-Each URL is downloaded (with gzip and redirects handled) and detected as RSS 2.0, Atom 1.0, RSS 1.0 (RDF) or JSON Feed 1.x. If the URL is an ordinary web page, the Actor reads the `<link rel="alternate" type="application/rss+xml">` / `atom+xml` / `feed+json` tags in the page head and, failing that, probes common paths such as `/feed`, `/rss.xml` and `/atom.xml`, then parses the first working feed. CDATA blocks, escaped HTML, HTML entities, `content:encoded`, `dc:creator`, categories, `media:content`, `itunes:image` and enclosures are all normalized into one item shape, and dates are converted to ISO 8601.
-
-The Actor reads feeds only: it does not open the linked articles, so the content is whatever the publisher puts in the feed (full text for most blogs, a summary for many news sites).
+Each URL is downloaded (gzip and redirects handled) and its feed format detected. For a web page, the Actor reads the `<link rel="alternate" type="application/rss+xml">` / `atom+xml` / `feed+json` head tags, otherwise probes common paths such as `/feed`, `/rss.xml` and `/atom.xml`, and uses the first working feed. CDATA, escaped HTML, entities, `content:encoded`, `dc:creator`, categories, `media:content`, `itunes:image` and enclosures are normalized into one item shape, and dates become ISO 8601.
 
 ## How to use it
 
-1. Open the Actor and paste your feed or website URLs into **Feed or website URLs**, one per line.
-2. Optionally set **Max items per feed**, a **Published after** date, and switch off **Include full HTML content** if you only need titles and links.
-3. Click **Start**. Items appear in the **Output** tab within seconds.
-4. Download the dataset as JSON, CSV, Excel or XML, or connect it to Google Sheets, Slack, Make, Zapier or a webhook via the **Integrations** tab.
-5. For a recurring feed, add a **Schedule** and turn on **Only new items since the last run** so each run delivers only posts you have not received before (see Monitor mode below).
+1. Paste feed or website URLs into **Feed or website URLs**, one per line.
+2. Optionally set **Max items per feed** and **Published after**, or switch off **Include full HTML content** (`contentText` stays available).
+3. Click **Start**; items appear in the **Output** tab within seconds as JSON, CSV, Excel or XML, with Google Sheets, Slack, Make, Zapier and webhooks in the **Integrations** tab.
+4. For recurring runs, add a **Schedule** and turn on **Only new items since the last run** (see Monitor mode).
 
 ```json
 {
@@ -72,7 +68,7 @@ One record per feed item (trimmed):
 }
 ```
 
-Feeds that could not be loaded are recorded too, so nothing silently disappears:
+Failed feeds are recorded too:
 
 ```json
 { "feedUrl": "https://example.com/no-feed-here", "success": false, "errorType": "not-found", "error": "No RSS, Atom or JSON feed found for this page", "fetchedAt": "..." }
@@ -82,23 +78,23 @@ Feeds that could not be loaded are recorded too, so nothing silently disappears:
 
 | Field | Description |
 | --- | --- |
-| `feedUrl` | The feed that was parsed. When it was discovered from a web page, `discoveredFrom` holds the page URL. |
+| `feedUrl` | Parsed feed URL; `discoveredFrom` is the page it was discovered from. |
 | `feedTitle` / `feedType` | Feed title and format: `rss`, `atom`, `rss1` or `json`. |
-| `id` | Item identifier (`guid`, Atom `id`, JSON `id`), falling back to the link. |
-| `title` / `url` / `author` | Item title (HTML stripped), absolute link and author name (`dc:creator`, `author`, Atom `author/name`, feed-level author as fallback). |
-| `publishedAt` / `updatedAt` | ISO 8601 timestamps, or `null` when the feed has none. |
-| `summary` | Plain-text summary (`description`, Atom `summary`, JSON `summary`), up to 5,000 characters. |
-| `contentHtml` | Full HTML body (`content:encoded`, Atom `content`, JSON `content_html`), up to 50,000 characters. `null` when **Include full HTML content** is off. |
-| `contentText` | The body as plain text with paragraph breaks, up to 5,000 characters. `null` when **Add plain-text content** is off. |
+| `id` | `guid`, Atom `id` or JSON `id`, falling back to the link. |
+| `title` / `url` / `author` | Title (HTML stripped), absolute link, author (`dc:creator`, `author`, Atom `author/name`, or feed-level author). |
+| `publishedAt` / `updatedAt` | ISO 8601 timestamps, or `null`. |
+| `summary` | Plain-text summary (`description`, Atom `summary`, JSON `summary`), max 5,000 characters. |
+| `contentHtml` | Full HTML body (`content:encoded`, Atom `content`, JSON `content_html`), max 50,000 characters; `null` with **Include full HTML content** off. |
+| `contentText` | Plain-text body with paragraph breaks, max 5,000 characters; `null` with **Add plain-text content** off. |
 | `categories[]` | Categories, tags or `dc:subject` values, de-duplicated. |
-| `enclosures[]` | `url`, `type` (MIME) and `length` (bytes) of enclosures, Media RSS content and JSON Feed attachments. |
-| `imageUrl` | Lead image from Media RSS, `itunes:image`, an image enclosure or the first `<img>` in the content. |
-| `isNew` | `true` when the item was not delivered by any earlier run that used the same state store, `false` when it was. Always present, so you can keep the full output and still spot new posts. |
-| `errorType` | For failures only: `invalid-url`, `not-found`, `invalid-feed`, `http-error`, `blocked`, `dns`, `timeout`, `network` or `other`. |
+| `enclosures[]` | `url`, `type` (MIME) and `length` (bytes) from enclosures, Media RSS and JSON Feed attachments. |
+| `imageUrl` | Lead image: Media RSS, `itunes:image`, an image enclosure or the first `<img>` in the content. |
+| `isNew` | `true` unless an earlier run with the same state store delivered the item; always present. |
+| `errorType` | Failures only: `invalid-url`, `not-found`, `invalid-feed`, `http-error`, `blocked`, `dns`, `timeout`, `network` or `other`. |
 
 ## Use it from the API, Python, JavaScript or an AI agent
 
-Run the Actor and get the dataset back in one HTTP call:
+One HTTP call:
 
 ```bash
 curl -X POST "https://api.apify.com/v2/acts/josh99smith~rss-feed-to-json/run-sync-get-dataset-items?token=<YOUR_API_TOKEN>" \
@@ -106,7 +102,7 @@ curl -X POST "https://api.apify.com/v2/acts/josh99smith~rss-feed-to-json/run-syn
   -d '{"feedUrls": ["https://blog.apify.com/rss/"], "maxItemsPerFeed": 20}'
 ```
 
-Python, with the [apify-client](https://docs.apify.com/api/client/python) package:
+Python ([apify-client](https://docs.apify.com/api/client/python)):
 
 ```python
 from apify_client import ApifyClient
@@ -119,7 +115,7 @@ for item in client.dataset(run["defaultDatasetId"]).iterate_items():
     print(item.get("publishedAt"), item.get("title"), item.get("url"))
 ```
 
-JavaScript or TypeScript, with the [apify-client](https://docs.apify.com/api/client/js) package:
+JavaScript or TypeScript ([apify-client](https://docs.apify.com/api/client/js)):
 
 ```javascript
 import { ApifyClient } from 'apify-client';
@@ -134,68 +130,62 @@ const { items } = await client.dataset(run.defaultDatasetId).listItems();
 console.log(items.map((item) => [item.title, item.url]));
 ```
 
-The Actor is also available as a tool through the Apify MCP server, so AI agents can call it directly, and it can be scheduled or connected to Zapier, Make, n8n and Google Sheets in the **Integrations** tab.
+It is also a tool in the Apify MCP server for AI agents and connects to Zapier, Make, n8n and Google Sheets in the **Integrations** tab.
 
 ## Monitor mode: only new items since the last run
 
-Switch on **Only new items since the last run** and the Actor remembers the id of every item it delivers (the feed `guid` or `id`, falling back to the link, then to a hash of title and date) in a named key-value store (`rss-feed-to-json-seen` by default). The first run returns everything; every run after that returns **only items that were not in an earlier run**. Items skipped as already seen are never billed, so a scheduled run that finds nothing new costs nothing.
+With **Only new items since the last run** on, the Actor stores the id of every delivered item (feed `guid` or `id`, else the link, else a hash of title and date) in a named key-value store (`rss-feed-to-json-seen` by default). The first run returns everything; later runs return **only items not seen before**. Skipped items are never billed.
 
-This turns the Actor into a feed monitor: schedule it hourly, connect the dataset to Slack, email, Discord, Google Sheets or a webhook in the **Integrations** tab, and each notification contains only fresh posts. Unlike **Published after**, it needs no date bookkeeping between runs and also catches items without a publication date. The state store is shared by all runs of the Actor in your account, so give each group of feeds you track separately its own **State store name** (for example `competitor-blogs` and `podcasts`).
+Unlike **Published after**, this needs no date bookkeeping between runs and also catches items without a publication date. The store is shared by all runs in your account, so give each feed group its own **State store name** (for example `competitor-blogs` and `podcasts`).
 
-Details worth knowing:
-
-- Ids that have not appeared in any run for **Forget seen items after (days)** (default 90) are dropped from the store; an item that comes back after that counts as new again. The store holds at most 100,000 ids.
-- With monitor mode off, the `isNew` field still tells you whether each item was seen before, so you can keep the full dataset and highlight new rows yourself.
-- The `SUMMARY` record reports `newItems`, `alreadySeen` and `stateStoreName` for each run.
+Ids absent for **Forget seen items after (days)** (default 90) are dropped and count as new if they return; the store holds at most 100,000 ids. With monitor mode off, `isNew` still marks previously seen items. `SUMMARY` in the key-value store reports `newItems`, `alreadySeen` and `stateStoreName`.
 
 ## Pricing: how much does it cost to convert a feed to JSON?
 
-You pay a **flat price per delivered item** (shown next to the Start button); 2,000 items cost about $1. Nothing is charged for Actor start-up, for items skipped by monitor mode or for feeds that fail. Use **Max items per feed** and **Published after** to fetch only what you need, and the Actor stops automatically when it reaches the maximum cost you set for a run.
+You pay a **flat price per delivered item** (shown next to the Start button); 2,000 items cost about $1. Nothing is charged for Actor start-up, items skipped by monitor mode or feeds that fail. **Max items per feed** and **Published after** limit what is fetched; the Actor stops when a run reaches the maximum cost you set.
 
 **How it compares (September 2026).** Comparable feed readers charge $0.00115 per item plus a $0.035 start fee, or $0.008 per item. This Actor charges $0.0005 per item with no start fee, supports RSS, Atom, RSS 1.0 and JSON Feed, discovers feeds from a plain site URL, and offers monitor mode so scheduled runs return only new items, with skipped items never billed.
 
 ## Tips
 
-- **Only new items**: on a schedule, turn on **Only new items since the last run** so you only pay for articles that were not delivered before. **Published after** still works when you prefer an explicit date cut-off.
-- **Smaller datasets**: switch off **Include full HTML content** when you just need titles, links and dates; `contentText` remains available for search and LLM use.
-- **Blocked feeds**: a few publishers block cloud IP addresses. Enable **Proxy configuration > Apify Proxy** in the Advanced section (proxy traffic is billed by Apify separately).
-- **Websites instead of feeds**: pasting `https://www.theverge.com` is enough; the Actor picks up the advertised feed. If a site advertises several, the first working one is used, so paste the exact feed URL when you want a specific one.
+- **Blocked feeds**: some publishers block cloud IP addresses. Enable **Proxy configuration > Apify Proxy** in the Advanced section (proxy traffic is billed by Apify separately).
+- **Websites instead of feeds**: pasting `https://www.theverge.com` is enough; if a site advertises several feeds the first working one is used, so paste the exact URL for a specific feed.
 
 ## FAQ
 
 ### Which feed formats can be converted to JSON?
 
-RSS 2.0 (including podcast feeds with iTunes and Media RSS extensions), Atom 1.0, RSS 1.0 / RDF and JSON Feed 1.0 and 1.1. Feeds served gzip-compressed or behind redirects work too.
+RSS 2.0 (including podcast feeds with iTunes and Media RSS extensions), Atom 1.0, RSS 1.0 / RDF and JSON Feed 1.0 and 1.1, gzip-compressed or behind redirects.
 
 ### Why is `contentHtml` short or missing for some items?
 
-The Actor returns exactly what the feed contains, and many news publishers only include a summary. To get full article text, pass the `url` values to a content-extraction Actor.
+The Actor reads feeds only, never linked articles, so you get what the feed contains: full text for most blogs, a summary for many news sites. For full articles, pass the `url` values to a content-extraction Actor.
 
 ### How are feed dates handled?
 
-RFC 822 (`Tue, 10 Jun 2003 04:00:00 GMT`), ISO 8601 and common timezone abbreviations are converted to UTC ISO 8601. Items whose dates cannot be parsed have `publishedAt: null` and are never filtered out by **Published after**.
+RFC 822 (`Tue, 10 Jun 2003 04:00:00 GMT`), ISO 8601 and common timezone abbreviations become UTC ISO 8601. Unparseable dates give `publishedAt: null` and are never filtered by **Published after**.
 
 ### What are the limits on items, content size and feeds?
 
-**Max items per feed** goes up to 10,000 per run (default 100). `contentHtml` is capped at 50,000 characters and `summary` and `contentText` at 5,000 characters each. A feed file may be up to 32 MB, up to 10 feeds are fetched in parallel, and each request times out after at most 120 seconds.
+**Max items per feed** goes up to 10,000 per run (default 100). `contentHtml` is capped at 50,000 characters, `summary` and `contentText` at 5,000 each. Feed files may be up to 32 MB, up to 10 feeds are fetched in parallel, and each request times out after at most 120 seconds.
 
 ### How do I reset the seen list?
 
-Open **Storage > Key-value stores** in Apify Console and delete the store named in **State store name** (`rss-feed-to-json-seen` unless you changed it); the next run starts from scratch and returns everything again. To start a fresh watchlist without losing the old one, set a new **State store name** instead.
+Delete the store named in **State store name** (`rss-feed-to-json-seen` unless you changed it) under **Storage > Key-value stores** in Apify Console; the next run returns everything again. Or set a new **State store name** to keep the old watchlist.
 
 ### Is it legal to parse RSS feeds?
 
-Feeds are published for syndication and read exactly as a feed reader would, a couple of requests per feed. The Actor stores only what the publisher includes in the feed. You are responsible for using the content in line with the publisher's terms and the laws that apply to you.
+Feeds are published for syndication and read as a feed reader would (a couple of requests per feed); only what the publisher includes is stored. Complying with the publisher's terms and applicable law is your responsibility.
 
 ### Will the output fields change between runs?
 
-No. Output fields are stable: existing fields are never renamed or removed without a major version bump announced in the changelog, and new fields are only ever added. You can build integrations on the schema without checking it after every run.
+No. Existing fields are never renamed or removed without a major version bump announced in the changelog; new fields are only ever added.
 
 ## Related Actors by the same developer
 
-- [Website Tech Stack Detector](https://apify.com/josh99smith/tech-stack-detector): find out what a website is built with.
-- [Website Screenshot API](https://apify.com/josh99smith/website-screenshot-api): full-page screenshots and PDFs of any URL.
-- [Google Autocomplete Keyword Scraper](https://apify.com/josh99smith/google-autocomplete-scraper): keyword suggestions from Google search.
+- [Website Tech Stack Detector](https://apify.com/josh99smith/tech-stack-detector): what a website is built with.
+- [Website Screenshot API](https://apify.com/josh99smith/website-screenshot-api): full-page screenshots and PDFs.
+- [Google Autocomplete Keyword Scraper](https://apify.com/josh99smith/google-autocomplete-scraper): Google search keyword suggestions.
 - [App Store & Google Play Reviews Scraper](https://apify.com/josh99smith/app-reviews-scraper): app reviews from both stores.
 - [PageSpeed Insights Core Web Vitals Audit](https://apify.com/josh99smith/pagespeed-insights-audit): Core Web Vitals via Google's API.
 - [Remote Jobs Aggregator API](https://apify.com/josh99smith/remote-jobs-aggregator): remote job listings in one dataset.
@@ -204,6 +194,4 @@ No. Output fields are stable: existing fields are never renamed or removed witho
 
 ## Support and feedback
 
-Found a feed that is not parsed correctly? Open a ticket in the **Issues** tab of this Actor with the feed URL and we will fix it.
-
-This Actor is open source under the MIT licence.
+Found a feed that is not parsed correctly? Open a ticket in the **Issues** tab with the feed URL. Open source under the MIT licence.
