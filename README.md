@@ -152,6 +152,8 @@ Details worth knowing:
 
 You pay a **flat price per delivered item** (shown next to the Start button); 2,000 items cost about $1. Nothing is charged for Actor start-up, for items skipped by monitor mode or for feeds that fail. Use **Max items per feed** and **Published after** to fetch only what you need, and the Actor stops automatically when it reaches the maximum cost you set for a run.
 
+**How it compares (September 2026).** Comparable feed readers charge $0.00115 per item plus a $0.035 start fee, or $0.008 per item. This Actor charges $0.0005 per item with no start fee, supports RSS, Atom, RSS 1.0 and JSON Feed, discovers feeds from a plain site URL, and offers monitor mode so scheduled runs return only new items, with skipped items never billed.
+
 ## Tips
 
 - **Only new items**: on a schedule, turn on **Only new items since the last run** so you only pay for articles that were not delivered before. **Published after** still works when you prefer an explicit date cut-off.
@@ -184,6 +186,10 @@ Open **Storage > Key-value stores** in Apify Console and delete the store named 
 ### Is it legal to parse RSS feeds?
 
 Feeds are published for syndication and read exactly as a feed reader would, a couple of requests per feed. The Actor stores only what the publisher includes in the feed. You are responsible for using the content in line with the publisher's terms and the laws that apply to you.
+
+### Will the output fields change between runs?
+
+No. Output fields are stable: existing fields are never renamed or removed without a major version bump announced in the changelog, and new fields are only ever added. You can build integrations on the schema without checking it after every run.
 
 ## Related Actors by the same developer
 
