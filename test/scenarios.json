@@ -1,0 +1,116 @@
+{
+    "happy-path": {
+        "input": {
+            "feedUrls": [
+                "https://blog.apify.com/rss/",
+                "https://hnrss.org/frontpage",
+                "https://www.theverge.com"
+            ]
+        },
+        "expect": {
+            "status": "SUCCEEDED",
+            "minOk": 40,
+            "maxFailed": 0,
+            "maxDurationSecs": 60
+        }
+    },
+    "many-formats": {
+        "input": {
+            "feedUrls": [
+                "https://feeds.bbci.co.uk/news/rss.xml",
+                "https://www.reddit.com/r/programming/.rss",
+                "https://github.blog/feed/",
+                "https://daringfireball.net/feeds/json",
+                "https://xkcd.com/atom.xml",
+                "https://feeds.npr.org/1001/rss.xml",
+                "https://podcasts.files.bbci.co.uk/p02nq0gn.rss"
+            ],
+            "maxItemsPerFeed": 20
+        },
+        "expect": {
+            "status": "SUCCEEDED",
+            "minOk": 80,
+            "maxFailed": 1
+        }
+    },
+    "discovery-from-homepages": {
+        "input": {
+            "feedUrls": [
+                "https://www.nasa.gov",
+                "https://techcrunch.com",
+                "https://www.smashingmagazine.com"
+            ],
+            "maxItemsPerFeed": 10
+        },
+        "expect": {
+            "status": "SUCCEEDED",
+            "minOk": 20
+        }
+    },
+    "date-filter-no-content": {
+        "input": {
+            "feedUrls": [
+                "https://hnrss.org/frontpage"
+            ],
+            "publishedAfter": "2099-01-01",
+            "includeContent": false,
+            "plainText": false
+        },
+        "expect": {
+            "status": "SUCCEEDED",
+            "maxOk": 0,
+            "maxFailed": 0
+        }
+    },
+    "errors": {
+        "input": {
+            "feedUrls": [
+                "https://example.com",
+                "https://httpbin.org/status/404",
+                "https://httpbin.org/json",
+                "https://this-domain-does-not-exist-abc123.com/feed",
+                "bad url",
+                "https://httpbin.org/delay/30"
+            ],
+            "timeoutSecs": 10
+        },
+        "expect": {
+            "status": "SUCCEEDED",
+            "maxOk": 0,
+            "errorTypes": [
+                "not-found",
+                "http-error",
+                "invalid-feed",
+                "dns",
+                "invalid-url",
+                "timeout",
+                "network",
+                "blocked"
+            ]
+        }
+    },
+    "budget-cap": {
+        "input": {
+            "feedUrls": [
+                "https://feeds.bbci.co.uk/news/rss.xml",
+                "https://hnrss.org/frontpage"
+            ],
+            "maxItemsPerFeed": 100
+        },
+        "maxTotalChargeUsd": 0.01,
+        "expect": {
+            "status": "SUCCEEDED",
+            "maxItems": 25,
+            "stoppedEarlyDueToBudget": true
+        }
+    },
+    "empty-input": {
+        "input": {
+            "feedUrls": []
+        },
+        "expect": {
+            "status": "FAILED",
+            "maxItems": 0
+        }
+    }
+}
