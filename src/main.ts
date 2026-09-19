@@ -5,8 +5,19 @@ import { Actor, log } from 'apify';
 import { type FeedItem, type FeedType, type ParsedFeed, parseFeed } from './feed.js';
 import { createFetcher, type ErrorType, type Fetcher } from './fetch.js';
 import { COMMON_FEED_PATHS, discoverFeedLinks, htmlToText, truncate } from './html.js';
+import {
+    DEFAULT_SEEN_TTL_DAYS,
+    hashId,
+    markSeen,
+    parseSeenRecord,
+    pruneSeen,
+    resolveStoreName,
+    SEEN_RECORD_KEY,
+    splitBySeen,
+} from './seen.js';
 
 const CHARGE_EVENT = 'feed-item';
+const ACTOR_NAME = 'rss-feed-to-json';
 const PUSH_BATCH_SIZE = 500;
 const FEED_CONCURRENCY = 10;
 const MAX_CONTENT_HTML = 50_000;
@@ -19,6 +30,9 @@ interface Input {
     includeContent?: boolean;
     plainText?: boolean;
     timeoutSecs?: number;
+    onlyNew?: boolean;
+    stateStoreName?: string;
+    seenTtlDays?: number;
     proxyConfiguration?: {
         useApifyProxy?: boolean;
         apifyProxyGroups?: string[];
@@ -44,6 +58,8 @@ interface ItemRecord {
     enclosures: { url: string; type: string | null; length: number | null }[];
     imageUrl: string | null;
     fetchedAt: string;
+    /** True when this item was not delivered by any previous run sharing the same state store. */
+    isNew: boolean;
     /** Present only when the feed was discovered from a web page. */
     discoveredFrom?: string;
 }
@@ -149,6 +165,14 @@ const maxItemsPerFeed = Math.min(Math.max(input.maxItemsPerFeed ?? 100, 1), 10_0
 const includeContent = input.includeContent ?? true;
 const plainText = input.plainText ?? true;
 const timeoutSecs = Math.min(Math.max(input.timeoutSecs ?? 30, 5), 120);
+const onlyNew = input.onlyNew ?? false;
+const seenTtlDays = Math.min(Math.max(Math.floor(Number(input.seenTtlDays ?? DEFAULT_SEEN_TTL_DAYS)) || 0, 0), 3650);
+const stateStoreName = resolveStoreName(input.stateStoreName, ACTOR_NAME) ?? '';
+if (!stateStoreName) {
+    await Actor.fail(
+        `Input "stateStoreName" is not a valid key-value store name: "${input.stateStoreName}". Use 3-63 letters, digits and dashes, e.g. "news-watchlist".`,
+    );
+}
 
 let publishedAfterMs: number | null = null;
 if (input.publishedAfter?.trim()) {
@@ -196,16 +220,31 @@ const proxyUrl = proxyConfiguration ? await proxyConfiguration.newUrl() : undefi
 const fetch = createFetcher({ timeoutMs: timeoutSecs * 1000, proxyUrl, retries: 1 });
 const { isPayPerEvent } = Actor.getChargingManager().getPricingInfo();
 
+// Monitor mode state: ids delivered by earlier runs live in a named store so scheduled runs can skip them.
+const stateStore = await Actor.openKeyValueStore(stateStoreName);
+const seenBefore = parseSeenRecord(await stateStore.getValue(SEEN_RECORD_KEY));
+const seenBeforeCount = Object.keys(seenBefore.ids).length;
+if (seenBeforeCount > 0)
+    log.info(`Loaded ${seenBeforeCount} previously seen item id(s) from store "${stateStoreName}".`);
+const idsSeenThisRun = new Set<string>();
+
 let feedsParsed = 0;
 let itemsPushed = 0;
 let itemsCharged = 0;
+let itemsNew = 0;
+let itemsAlreadySeen = 0;
 let itemsSkippedByDate = 0;
 let failures = invalid.length;
 let stopBecauseOfBudget = false;
 
 log.info(
-    `Fetching ${targets.length} feed(s): up to ${maxItemsPerFeed} items each${publishedAfterMs ? `, published after ${new Date(publishedAfterMs).toISOString()}` : ''}.`,
+    `Fetching ${targets.length} feed(s): up to ${maxItemsPerFeed} items each${publishedAfterMs ? `, published after ${new Date(publishedAfterMs).toISOString()}` : ''}${onlyNew ? `, only items not seen in previous runs (state store "${stateStoreName}")` : ''}.`,
 );
+
+/** Stable id for the seen list: guid/id, then link, then a hash of title + publication date. */
+function stableItemId(record: ItemRecord): string {
+    return record.id ?? record.url ?? hashId(record.title, record.publishedAt);
+}
 
 function shapeItem(
     item: FeedItem,
@@ -232,6 +271,7 @@ function shapeItem(
         enclosures: item.enclosures,
         imageUrl: item.imageUrl,
         fetchedAt,
+        isNew: true,
     };
     if (discoveredFrom) record.discoveredFrom = discoveredFrom;
     return record;
@@ -243,7 +283,9 @@ async function pushCharged(records: ItemRecord[]): Promise<boolean> {
         if (stopBecauseOfBudget) return false;
         const wanted = records.slice(i, i + PUSH_BATCH_SIZE);
         // Ask the budget how many events still fit and push only that many (the SDK's chargedCount over-reports).
-        const allowed = isPayPerEvent ? Actor.getChargingManager().calculateMaxEventChargeCountWithinLimit(CHARGE_EVENT) : wanted.length;
+        const allowed = isPayPerEvent
+            ? Actor.getChargingManager().calculateMaxEventChargeCountWithinLimit(CHARGE_EVENT)
+            : wanted.length;
         const batch = wanted.slice(0, Math.max(0, allowed));
         let eventChargeLimitReached = batch.length < wanted.length;
         if (batch.length > 0) {
@@ -253,6 +295,10 @@ async function pushCharged(records: ItemRecord[]): Promise<boolean> {
         const stored = batch.length;
         itemsPushed += stored;
         itemsCharged += stored;
+        for (const record of batch) {
+            idsSeenThisRun.add(stableItemId(record));
+            if (record.isNew) itemsNew += 1;
+        }
         if (eventChargeLimitReached) {
             stopBecauseOfBudget = true;
             log.warning(
@@ -297,12 +343,21 @@ async function processFeed(target: string): Promise<void> {
     }
     itemsSkippedByDate += skippedByDate;
 
+    // Flag every item; in monitor mode drop the already-seen ones before pushing so they are never billed.
+    const { fresh, alreadySeen } = splitBySeen(records, stableItemId, seenBefore);
+    for (const record of alreadySeen) {
+        record.isNew = false;
+        idsSeenThisRun.add(stableItemId(record)); // still in the feed, so keep it in the store past the TTL
+    }
+    itemsAlreadySeen += alreadySeen.length;
+    const toDeliver = onlyNew ? fresh : records;
+
     const label = feed.feedTitle ? `"${feed.feedTitle}"` : feedUrl;
     log.info(
-        `${feedUrl}: ${feed.feedType} feed ${label} with ${feed.items.length} item(s), delivering ${records.length}${skippedByDate ? ` (${skippedByDate} older than publishedAfter)` : ''}${discoveredFrom ? ` (discovered from ${discoveredFrom})` : ''}`,
+        `${feedUrl}: ${feed.feedType} feed ${label} with ${feed.items.length} item(s), delivering ${toDeliver.length}${skippedByDate ? ` (${skippedByDate} older than publishedAfter)` : ''}${alreadySeen.length ? ` (${alreadySeen.length} seen before${onlyNew ? ', skipped' : ''})` : ''}${discoveredFrom ? ` (discovered from ${discoveredFrom})` : ''}`,
     );
-    if (records.length === 0) return;
-    await pushCharged(records);
+    if (toDeliver.length === 0) return;
+    await pushCharged(toDeliver);
 }
 
 const pending = [...targets];
@@ -328,11 +383,23 @@ const workers = Array.from({ length: Math.min(FEED_CONCURRENCY, pending.length) 
 });
 await Promise.all(workers);
 
+// Remember everything delivered this run (plus what was already known) so the next run can skip it.
+const { record: seenAfter, pruned } = pruneSeen(markSeen(seenBefore, idsSeenThisRun), seenTtlDays);
+await stateStore.setValue(SEEN_RECORD_KEY, seenAfter);
+log.info(
+    `Saved ${Object.keys(seenAfter.ids).length} seen item id(s) to store "${stateStoreName}"` +
+        `${pruned ? ` (${pruned} pruned as older than ${seenTtlDays} days or over the cap)` : ''}.`,
+);
+
 const summary = {
     feedsRequested: rawUrls.length,
     feedsParsed,
     itemsDelivered: itemsPushed,
     itemsCharged: isPayPerEvent ? itemsCharged : itemsPushed,
+    newItems: itemsNew,
+    alreadySeen: itemsAlreadySeen,
+    onlyNew,
+    stateStoreName,
     itemsSkippedByDate,
     failures,
     stoppedEarlyDueToBudget: stopBecauseOfBudget,

@@ -10,12 +10,13 @@ It is built for **developers, content teams, newsletter builders and automation 
 - Get full article HTML and plain text from a feed for LLM and RAG pipelines
 - Extract podcast enclosures, media files and lead images from feeds
 - Fetch only new feed items published after a given date
+- Monitor mode: get only the items that are new since the last run, so alerts never repeat
 - Aggregate many RSS feeds into one dataset for newsletters and monitoring
 
 ## What can you do with RSS and Atom Feed to JSON?
 
 - **Content aggregation**: merge dozens of blogs, news sites and podcasts into one dataset for a newsletter, a news app or an internal digest.
-- **Monitor competitors and industry news**: schedule hourly runs, filter with **Published after** and push new items to Slack, email, Google Sheets or a webhook.
+- **Monitor competitors and industry news**: schedule hourly runs with **Only new items since the last run** on and push each batch of new posts to Slack, email, Google Sheets or a webhook.
 - **Feed AI and RAG pipelines**: the `contentText` field gives you clean article text ready for embeddings, summarisation or classification without scraping every page.
 - **Replace Zapier / Make RSS triggers**: run on a schedule for a fraction of the price and keep the full item history in a dataset you own.
 - **Podcast and media tooling**: enclosure URLs, MIME types and file sizes are extracted from RSS enclosures, Media RSS and JSON Feed attachments.
@@ -33,6 +34,7 @@ The Actor reads feeds only: it does not open the linked articles, so the content
 2. Optionally set **Max items per feed**, a **Published after** date, and switch off **Include full HTML content** if you only need titles and links.
 3. Click **Start**. Items appear in the **Output** tab within seconds.
 4. Download the dataset as JSON, CSV, Excel or XML, or connect it to Google Sheets, Slack, Make, Zapier or a webhook via the **Integrations** tab.
+5. For a recurring feed, add a **Schedule** and turn on **Only new items since the last run** so each run delivers only posts you have not received before (see Monitor mode below).
 
 ```json
 {
@@ -65,7 +67,8 @@ One record per feed item (trimmed):
     "categories": ["AI", "Tool comparisons"],
     "enclosures": [{ "url": "https://storage.ghost.io/.../langchain-alternatives-1.png", "type": null, "length": null }],
     "imageUrl": "https://storage.ghost.io/.../langchain-alternatives-1.png",
-    "fetchedAt": "2026-09-18T19:55:04.974Z"
+    "fetchedAt": "2026-09-18T19:55:04.974Z",
+    "isNew": true
 }
 ```
 
@@ -90,6 +93,7 @@ Feeds that could not be loaded are recorded too, so nothing silently disappears:
 | `categories[]` | Categories, tags or `dc:subject` values, de-duplicated. |
 | `enclosures[]` | `url`, `type` (MIME) and `length` (bytes) of enclosures, Media RSS content and JSON Feed attachments. |
 | `imageUrl` | Lead image from Media RSS, `itunes:image`, an image enclosure or the first `<img>` in the content. |
+| `isNew` | `true` when the item was not delivered by any earlier run that used the same state store, `false` when it was. Always present, so you can keep the full output and still spot new posts. |
 | `errorType` | For failures only: `invalid-url`, `not-found`, `invalid-feed`, `http-error`, `blocked`, `dns`, `timeout`, `network` or `other`. |
 
 ## Use it from the API, Python, JavaScript or an AI agent
@@ -132,13 +136,25 @@ console.log(items.map((item) => [item.title, item.url]));
 
 The Actor is also available as a tool through the Apify MCP server, so AI agents can call it directly, and it can be scheduled or connected to Zapier, Make, n8n and Google Sheets in the **Integrations** tab.
 
+## Monitor mode: only new items since the last run
+
+Switch on **Only new items since the last run** and the Actor remembers the id of every item it delivers (the feed `guid` or `id`, falling back to the link, then to a hash of title and date) in a named key-value store (`rss-feed-to-json-seen` by default). The first run returns everything; every run after that returns **only items that were not in an earlier run**. Items skipped as already seen are never billed, so a scheduled run that finds nothing new costs nothing.
+
+This turns the Actor into a feed monitor: schedule it hourly, connect the dataset to Slack, email, Discord, Google Sheets or a webhook in the **Integrations** tab, and each notification contains only fresh posts. Unlike **Published after**, it needs no date bookkeeping between runs and also catches items without a publication date. The state store is shared by all runs of the Actor in your account, so give each group of feeds you track separately its own **State store name** (for example `competitor-blogs` and `podcasts`).
+
+Details worth knowing:
+
+- Ids that have not appeared in any run for **Forget seen items after (days)** (default 90) are dropped from the store; an item that comes back after that counts as new again. The store holds at most 100,000 ids.
+- With monitor mode off, the `isNew` field still tells you whether each item was seen before, so you can keep the full dataset and highlight new rows yourself.
+- The `SUMMARY` record reports `newItems`, `alreadySeen` and `stateStoreName` for each run.
+
 ## Pricing: how much does it cost to convert a feed to JSON?
 
-You pay a **flat price per delivered item** (shown next to the Start button); 2,000 items cost about $1. Nothing is charged for Actor start-up or for feeds that fail. Use **Max items per feed** and **Published after** to fetch only what you need, and the Actor stops automatically when it reaches the maximum cost you set for a run.
+You pay a **flat price per delivered item** (shown next to the Start button); 2,000 items cost about $1. Nothing is charged for Actor start-up, for items skipped by monitor mode or for feeds that fail. Use **Max items per feed** and **Published after** to fetch only what you need, and the Actor stops automatically when it reaches the maximum cost you set for a run.
 
 ## Tips
 
-- **Only new items**: on a schedule, set **Published after** to the previous run time (or pass it via the API) so you only pay for new articles.
+- **Only new items**: on a schedule, turn on **Only new items since the last run** so you only pay for articles that were not delivered before. **Published after** still works when you prefer an explicit date cut-off.
 - **Smaller datasets**: switch off **Include full HTML content** when you just need titles, links and dates; `contentText` remains available for search and LLM use.
 - **Blocked feeds**: a few publishers block cloud IP addresses. Enable **Proxy configuration > Apify Proxy** in the Advanced section (proxy traffic is billed by Apify separately).
 - **Websites instead of feeds**: pasting `https://www.theverge.com` is enough; the Actor picks up the advertised feed. If a site advertises several, the first working one is used, so paste the exact feed URL when you want a specific one.
@@ -160,6 +176,10 @@ RFC 822 (`Tue, 10 Jun 2003 04:00:00 GMT`), ISO 8601 and common timezone abbrevia
 ### What are the limits on items, content size and feeds?
 
 **Max items per feed** goes up to 10,000 per run (default 100). `contentHtml` is capped at 50,000 characters and `summary` and `contentText` at 5,000 characters each. A feed file may be up to 32 MB, up to 10 feeds are fetched in parallel, and each request times out after at most 120 seconds.
+
+### How do I reset the seen list?
+
+Open **Storage > Key-value stores** in Apify Console and delete the store named in **State store name** (`rss-feed-to-json-seen` unless you changed it); the next run starts from scratch and returns everything again. To start a fresh watchlist without losing the old one, set a new **State store name** instead.
 
 ### Is it legal to parse RSS feeds?
 

@@ -12,7 +12,7 @@
             "type": "string",
             "title": "Run summary",
             "template": "{{links.apiDefaultKeyValueStoreUrl}}/records/SUMMARY",
-            "description": "Counts of requested feeds, parsed feeds, delivered and billed items, and failures."
+            "description": "Counts of requested feeds, parsed feeds, delivered and billed items, new vs. already-seen items (monitor mode) and failures."
         }
     }
 }

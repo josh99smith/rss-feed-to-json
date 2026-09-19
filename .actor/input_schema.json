@@ -41,6 +41,12 @@
             "description": "Strip HTML from the article body into `contentText` (capped at 5,000 characters). Handy for search indexes, LLM prompts and spreadsheets.",
             "default": true
         },
+        "onlyNew": {
+            "title": "Only new items since the last run",
+            "type": "boolean",
+            "description": "Monitor mode. The ids of every item delivered are remembered in a named key-value store, so scheduled runs return only items not seen before. The first run returns everything; later runs return only new posts. Items filtered out as already seen are never billed. Every record also carries an `isNew` flag, whether or not this is on.",
+            "default": false
+        },
         "timeoutSecs": {
             "title": "Request timeout (seconds)",
             "type": "integer",
@@ -50,6 +56,23 @@
             "maximum": 120,
             "editor": "number",
             "sectionCaption": "Advanced"
+        },
+        "stateStoreName": {
+            "title": "State store name",
+            "type": "string",
+            "description": "Name of the key-value store that remembers seen item ids for **Only new items since the last run**. Leave empty for the automatic name `rss-feed-to-json-seen`. Use different names to keep separate watchlists (e.g. one per group of feeds). Letters, digits and dashes only.",
+            "editor": "textfield",
+            "default": "",
+            "pattern": "^$|^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]$"
+        },
+        "seenTtlDays": {
+            "title": "Forget seen items after (days)",
+            "type": "integer",
+            "description": "Ids not seen in any run for this many days are dropped from the state store, which keeps it small. An item that reappears after that is reported as new again. Use 0 to keep ids forever (up to 100,000 ids, oldest dropped first).",
+            "default": 90,
+            "minimum": 0,
+            "maximum": 3650,
+            "editor": "number"
         },
         "proxyConfiguration": {
             "title": "Proxy configuration",

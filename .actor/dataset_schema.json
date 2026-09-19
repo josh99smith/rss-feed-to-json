@@ -13,6 +13,10 @@
                 "format": "date-time",
                 "description": "When the feed was fetched (ISO 8601, UTC)."
             },
+            "isNew": {
+                "type": "boolean",
+                "description": "True when this item was not delivered by any previous run sharing the same state store (see \"Only new items since the last run\"). Always present on item records."
+            },
             "feedTitle": {
                 "type": [
                     "string",
@@ -188,6 +192,7 @@
                     "url",
                     "author",
                     "publishedAt",
+                    "isNew",
                     "feedTitle",
                     "feedType",
                     "categories",
@@ -218,6 +223,10 @@
                     "publishedAt": {
                         "label": "Published",
                         "format": "date"
+                    },
+                    "isNew": {
+                        "label": "New",
+                        "format": "boolean"
                     },
                     "feedTitle": {
                         "label": "Feed",
