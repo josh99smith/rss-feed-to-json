@@ -1,3 +1,5 @@
+![rss-feed-to-json banner](https://raw.githubusercontent.com/josh99smith/apify-actor-assets/main/banners/rss-feed-to-json.png)
+
 **RSS to JSON** converter and RSS feed parser API: turn any RSS, Atom or JSON feed into clean, consistent JSON. Paste feed URLs (or website URLs; the Actor finds the feed) and get one normalized record per article, episode or post: title, link, author, date, categories, HTML and plain-text content, lead image and media enclosures.
 
 Built for **developers, content teams, newsletter builders and automation users**: a small flat price per item, no monthly subscription, and feeds that cannot be found, fetched or parsed are reported **free of charge**.
@@ -43,6 +45,8 @@ Each URL is downloaded (gzip and redirects handled) and its feed format detected
 ```
 
 ## Output
+
+![Sample output of rss-feed-to-json](https://raw.githubusercontent.com/josh99smith/apify-actor-assets/main/previews/rss-feed-to-json.png)
 
 One record per feed item (trimmed):
 
