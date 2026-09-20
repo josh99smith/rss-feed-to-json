@@ -1,0 +1,63 @@
+[
+    {
+        "name": "convert-rss-feed-to-json",
+        "title": "Convert an RSS feed to JSON",
+        "seoTitle": "Convert an RSS or Atom feed to JSON",
+        "seoDescription": "Turn RSS 2.0, Atom, RSS 1.0 and JSON Feed URLs into clean JSON items with title, link, author, date, content, categories and enclosures.",
+        "description": "Turn any RSS 2.0, Atom, RSS 1.0 or JSON Feed URL into clean JSON items with title, link, author, published date, HTML and plain-text content, categories and enclosures. Download as JSON, CSV or Excel.",
+        "input": {
+            "feedUrls": [
+                "https://feeds.bbci.co.uk/news/rss.xml",
+                "https://hnrss.org/frontpage",
+                "https://xkcd.com/atom.xml"
+            ],
+            "maxItemsPerFeed": 50
+        }
+    },
+    {
+        "name": "find-and-read-the-rss-feed-of-any-website",
+        "title": "Find and read the RSS feed of any website",
+        "seoTitle": "Find the RSS feed of a website and read it as JSON",
+        "seoDescription": "Paste a normal website URL; the feed is auto-discovered from the page's link tags or common paths and its latest items are returned as JSON.",
+        "description": "Paste ordinary website URLs and the Actor discovers their RSS or Atom feed from the page's link tags or common feed paths, then returns the latest items as JSON. No need to hunt for the feed address.",
+        "input": {
+            "feedUrls": [
+                "https://www.theverge.com",
+                "https://techcrunch.com",
+                "https://www.nasa.gov"
+            ],
+            "maxItemsPerFeed": 20
+        }
+    },
+    {
+        "name": "podcast-episodes-from-an-rss-feed",
+        "title": "Podcast episodes from an RSS feed",
+        "seoTitle": "Get podcast episodes and audio URLs from an RSS feed",
+        "seoDescription": "Parse podcast feeds into episodes with title, date, description, artwork and the audio enclosure URL and size, ready for a player or archive.",
+        "description": "Parse podcast feeds into one record per episode with title, date, description, artwork and the audio enclosure URL, type and size, for building players, archives or transcript pipelines.",
+        "input": {
+            "feedUrls": [
+                "https://podcasts.files.bbci.co.uk/p02nq0gn.rss",
+                "https://feeds.npr.org/510289/podcast.xml"
+            ],
+            "maxItemsPerFeed": 30
+        }
+    },
+    {
+        "name": "news-monitor-only-new-articles-since-last-run",
+        "title": "News monitor: only new articles since last run",
+        "seoTitle": "News feed monitor: only new articles since the last run",
+        "seoDescription": "Schedule this task and get only articles not seen before, from several feeds at once, for Slack or email digests via Integrations. Seen items are free.",
+        "description": "Monitor mode example: schedule it every hour and each run returns only articles that were not seen before, across several feeds, so an Integration to Slack, email or a webhook becomes a news digest. Already-seen items are never billed.",
+        "input": {
+            "feedUrls": [
+                "https://feeds.bbci.co.uk/news/technology/rss.xml",
+                "https://hnrss.org/frontpage",
+                "https://github.blog/feed/"
+            ],
+            "maxItemsPerFeed": 50,
+            "onlyNew": true,
+            "includeContent": false
+        }
+    }
+]
