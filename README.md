@@ -134,7 +134,24 @@ const { items } = await client.dataset(run.defaultDatasetId).listItems();
 console.log(items.map((item) => [item.title, item.url]));
 ```
 
-It is also a tool in the Apify MCP server for AI agents and connects to Zapier, Make, n8n and Google Sheets in the **Integrations** tab.
+### Use it from Claude, Cursor, ChatGPT or any MCP client
+
+The Actor is exposed as a tool by the [Apify MCP server](https://mcp.apify.com), so an AI agent can call it by name. Add this to your MCP client configuration (Claude Desktop, Claude Code, Cursor, VS Code, Windsurf and others):
+
+```json
+{
+    "mcpServers": {
+        "apify": {
+            "url": "https://mcp.apify.com?tools=josh99smith/rss-feed-to-json",
+            "headers": { "Authorization": "Bearer <YOUR_API_TOKEN>" }
+        }
+    }
+}
+```
+
+Then ask, for example: *"Fetch the latest 10 items from https://blog.apify.com/rss/ with josh99smith/rss-feed-to-json."* The agent fills in the input, runs the Actor and reads the dataset back; you pay the same per-result price as in the Console.
+
+The Actor can also be scheduled, or connected to Zapier, Make, n8n and Google Sheets in the **Integrations** tab.
 
 ## Monitor mode: only new items since the last run
 
@@ -199,3 +216,5 @@ No. Existing fields are never renamed or removed without a major version bump an
 ## Support and feedback
 
 Found a feed that is not parsed correctly? Open a ticket in the **Issues** tab with the feed URL. Open source under the MIT licence.
+
+The full source code is on GitHub: [josh99smith/rss-feed-to-json](https://github.com/josh99smith/rss-feed-to-json). Stars and pull requests are welcome.
