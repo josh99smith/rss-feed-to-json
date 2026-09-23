@@ -1,6 +1,6 @@
 {
     "actorOutputSchemaVersion": 1,
-    "title": "RSS and Atom Feed to JSON output",
+    "title": "Best Damn RSS to JSON Converter output",
     "properties": {
         "results": {
             "type": "string",

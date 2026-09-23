@@ -1,4 +1,4 @@
-![rss-feed-to-json banner](https://raw.githubusercontent.com/josh99smith/apify-actor-assets/main/banners/rss-feed-to-json.png)
+![rss-feed-to-json banner](https://raw.githubusercontent.com/josh99smith/apify-actor-assets/main/banners/rss-feed-to-json.png?v=bd1)
 
 **RSS to JSON** converter and RSS feed parser API: turn any RSS, Atom or JSON feed into clean, consistent JSON. Paste feed URLs (or website URLs; the Actor finds the feed) and get one normalized record per article, episode or post: title, link, author, date, categories, HTML and plain-text content, lead image and media enclosures.
 
@@ -227,6 +227,7 @@ You can also attach [webhooks](https://docs.apify.com/platform/integrations/webh
 - [Best Damn Remote Jobs Aggregator](https://apify.com/josh99smith/remote-jobs-aggregator): remote job listings in one dataset.
 - [Best Damn PDF Text Extractor](https://apify.com/josh99smith/pdf-text-extractor): text and metadata from PDF URLs.
 - [Best Damn Sitemap URL Extractor](https://apify.com/josh99smith/sitemap-url-extractor): all URLs from XML sitemaps.
+- [Best Damn YouTube Comments Scraper](https://apify.com/josh99smith/youtube-comments-scraper): comments and replies from YouTube videos and channels.
 
 ## Support and feedback
 

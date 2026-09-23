@@ -1,6 +1,6 @@
 {
     "$schema": "https://apify.com/schemas/v1/input.ide.json",
-    "title": "RSS and Atom Feed to JSON input",
+    "title": "Best Damn RSS to JSON Converter input",
     "description": "Paste feed URLs or website URLs. Every delivered feed item is one billable result; feeds that cannot be found, fetched or parsed are reported for free.",
     "type": "object",
     "schemaVersion": 1,
