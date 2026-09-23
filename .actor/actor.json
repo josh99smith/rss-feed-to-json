@@ -2,8 +2,8 @@
     "$schema": "https://apify.com/schemas/v1/actor.ide.json",
     "actorSpecification": 1,
     "name": "rss-feed-to-json",
-    "title": "RSS and Atom Feed to JSON",
-    "description": "Convert RSS, Atom and JSON feeds to clean JSON items with title, link, author, date, content and enclosures. Auto-discovers feeds from a site URL. Pay per item.",
+    "title": "Best Damn RSS to JSON Converter",
+    "description": "Convert RSS, Atom and JSON Feed into clean, consistent JSON items: title, link, author, date, content, images and podcast enclosures. Paste a site URL and it finds the feed for you. Pay per item; failed feeds are free.",
     "version": "0.1",
     "buildTag": "latest",
     "meta": {

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2 (2026-09-23)
+
+- Listing: joined the Best Damn series. New title "Best Damn RSS to JSON Converter", new description, icon and README banner. No change to inputs, output or pricing.
+
 ## 0.2.1 (2026-09-20)
 
 - Fixed: with several feeds fetched in parallel, two batches could be delivered at once and overshoot the run's cost cap with items that were never billed. Charged pushes are now serialised and the remaining budget is also tracked from the Actor's own charge count.
