@@ -232,6 +232,6 @@ You can also attach [webhooks](https://docs.apify.com/platform/integrations/webh
 
 ## Support and feedback
 
-Found a feed that is not parsed correctly? Open a ticket in the **Issues** tab with the feed URL. Open source under the MIT licence.
+Found a feed that is not parsed correctly? Open a ticket in the **Issues** tab with the feed URL. Open source under the MIT licence. If this Actor saved you time, a review on its Store page helps other people find it.
 
 The full source code is on GitHub: [josh99smith/rss-feed-to-json](https://github.com/josh99smith/rss-feed-to-json). Stars and pull requests are welcome.
